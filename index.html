@@ -126,7 +126,7 @@
             
             <div class="form-group">
                 <label class="form-label">IC İsim veya Takma İsim</label>
-                <input type="text" id="modal-username" class="modal-input" placeholder="Örn: Elisa Briones">
+                <input type="text" id="modal-username" class="modal-input" placeholder="Örn: Sera Mills">
             </div>
 
             <label class="checkbox-container">
@@ -196,6 +196,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyC8bruEKra7U1QclquhN9thLyYBVrYQjJI",
             authDomain: "lovecasino.firebaseapp.com",
+            databaseURL: "https://lovecasino-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "lovecasino",
             storageBucket: "lovecasino.firebasestorage.app",
             messagingSenderId: "954852025357",
@@ -240,7 +241,7 @@
             const text = textInput.value.trim();
             if (text === '' || currentICName === '') return;
 
-            // Firebase Veritabanına Mesajı Kaydet (Tüm ekranlara anlık düşer)
+            // Firebase Veritabanına Mesajı Kaydet
             db.ref('messages').push({
                 user: currentICName,
                 text: text
@@ -254,7 +255,7 @@
             
             // Son gelen mesajları dinle
             db.ref('messages').limitToLast(50).on('value', (snapshot) => {
-                messagesContainer.innerHTML = ''; // Listeyi güncelle
+                messagesContainer.innerHTML = ''; 
                 const data = snapshot.val();
                 if (data) {
                     Object.values(data).forEach(msg => {

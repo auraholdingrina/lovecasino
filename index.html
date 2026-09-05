@@ -32,6 +32,25 @@
         .logo-box span { font-size: 24px; }
         .logo-title { font-size: 18px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; }
         .logo-subtitle { font-size: 10px; color: #ffb700; letter-spacing: 3px; text-transform: uppercase; }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mod-login-btn {
+            background: transparent;
+            border: 1px solid #ffb700;
+            color: #ffb700;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mod-login-btn:hover { background: #ffb700; color: #000; }
+
         .room-status {
             font-size: 13px; font-weight: bold; color: #4caf50;
             background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3);
@@ -71,9 +90,40 @@
         .chat-messages {
             flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px;
         }
-        .chat-msg { background: rgba(255, 255, 255, 0.03); border-left: 3px solid #ff2a6d; padding: 8px 10px; border-radius: 4px; word-break: break-word; }
+        .chat-msg { 
+            background: rgba(255, 255, 255, 0.03); 
+            border-left: 3px solid #ff2a6d; 
+            padding: 8px 10px; 
+            border-radius: 4px; 
+            word-break: break-word; 
+            position: relative;
+        }
         .chat-user { font-weight: bold; color: #ffb74d; margin-bottom: 2px; font-size: 12px; }
         .chat-text { color: #e0e0e0; }
+
+        /* Moderatör Butonları (Sadece Modlar Görür) */
+        .mod-actions {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            display: none;
+            gap: 6px;
+        }
+        .chat-msg:hover .mod-actions {
+            display: flex;
+        }
+        .mod-btn {
+            background: #333;
+            border: none;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .mod-btn.delete { background: #d32f2f; }
+        .mod-btn.ban { background: #b71c1c; }
+        .mod-btn:hover { opacity: 0.8; }
 
         .chat-input-area {
             padding: 12px; background: rgba(15, 17, 23, 0.95); border-top: 1px solid #2a2d3e; display: flex; gap: 8px;
@@ -87,7 +137,7 @@
         }
         .chat-send-btn:hover { background: #d91b55; }
 
-        /* Giriş Modalı */
+        /* Modallık Ortak Tasarım */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px;
@@ -126,7 +176,7 @@
             
             <div class="form-group">
                 <label class="form-label">IC İsim veya Takma İsim</label>
-                <input type="text" id="modal-username" class="modal-input" placeholder="Örn: Sera Mills">
+                <input type="text" id="modal-username" class="modal-input" placeholder="Örn: Leandro Parrish">
             </div>
 
             <label class="checkbox-container">
@@ -135,6 +185,21 @@
             </label>
 
             <button id="enter-btn" class="modal-btn" disabled onclick="joinChat()">Sohbete Katıl</button>
+        </div>
+    </div>
+
+    <!-- Moderatör Giriş Modalı (Gizli Başlar) -->
+    <div class="modal-overlay" id="mod-modal" style="display: none;">
+        <div class="modal-box" style="border-color: #ffb700;">
+            <div class="modal-title" style="color: #ffb700;">🛡️ Moderatör Girişi</div>
+            <div class="form-group">
+                <label class="form-label">Moderatör Şifresi</label>
+                <input type="password" id="mod-password-input" class="modal-input" placeholder="Şifrenizi girin">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="modal-btn" style="background: #333; flex: 1;" onclick="closeModModal()">İptal</button>
+                <button class="modal-btn" style="background: #ffb700; color: #000; flex: 1;" onclick="verifyMod()">Giriş Yap</button>
+            </div>
         </div>
     </div>
 
@@ -147,8 +212,11 @@
                 <div class="logo-subtitle">Watch2Gether Room</div>
             </div>
         </div>
-        <div class="room-status">
-            <div class="status-dot"></div> Canlı Yayın Aktif
+        <div class="header-right">
+            <button class="mod-login-btn" onclick="openModModal()" id="mod-login-trigger">🛡️ Mod Girişi</button>
+            <div class="room-status">
+                <div class="status-dot"></div> Canlı Yayın Aktif
+            </div>
         </div>
     </header>
 
@@ -173,7 +241,7 @@
         <!-- Canlı Sohbet Paneli -->
         <div class="chat-section">
             <div class="section-header">
-                <span>💬 Canlı Sohbet (<span id="active-user-display">Misafir</span>)</span>
+                <span>💬 Canlı Sohbet (<span id="active-user-display">Misafir</span>) <span id="mod-badge" style="color: #ffb700; display:none;">[MOD]</span></span>
                 <span style="font-size: 11px; color: #888;">IC Sohbet</span>
             </div>
             <div class="chat-messages" id="chat-messages">
@@ -204,11 +272,12 @@
             measurementId: "G-RE4TLJHLD7"
         };
 
-        // Firebase Başlatma
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         let currentICName = "";
+        let isModerator = false;
+        const MOD_SECRET_PASSWORD = "509226"; // Buraya istediğiniz moderatör şifresini yazın!
 
         function toggleEnterButton() {
             const username = document.getElementById('modal-username').value.trim();
@@ -222,18 +291,43 @@
             const usernameInput = document.getElementById('modal-username').value.trim();
             if (usernameInput === "") return;
 
-            currentICName = usernameInput;
-            document.getElementById('active-user-display').innerText = currentICName;
-            document.getElementById('login-modal').style.display = 'none';
+            // Ban kontrolü
+            db.ref('bannedUsers/' + usernameInput).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    alert("Bu IC isim (takma isim) platformdan engellenmiştir (banlanmıştır).");
+                    return;
+                }
 
-            // Firebase Üzerinden Sistem Katılım Mesajı Gönder
-            db.ref('messages').push({
-                user: "Sistem",
-                text: `${currentICName} sohbet odasına katıldı. İyi eğlenceler!`
+                currentICName = usernameInput;
+                document.getElementById('active-user-display').innerText = currentICName;
+                document.getElementById('login-modal').style.display = 'none';
+
+                // Firebase'den banlı listesini ve mesajları dinle
+                listenBansAndMessages();
             });
+        }
 
-            // Firebase'den Mesajları Dinlemeye Başla
-            listenMessages();
+        function openModModal() {
+            document.getElementById('mod-modal').style.display = 'flex';
+        }
+
+        function closeModModal() {
+            document.getElementById('mod-modal').style.display = 'none';
+        }
+
+        function verifyMod() {
+            const pass = document.getElementById('mod-password-input').value;
+            if (pass === MOD_SECRET_PASSWORD) {
+                isModerator = true;
+                document.getElementById('mod-badge').style.display = 'inline';
+                document.getElementById('mod-login-trigger').style.display = 'none';
+                closeModModal();
+                alert("Moderatör yetkisi başarıyla alındı!");
+                // Görünümü güncellemek için mesajları tekrar tetikle
+                listenBansAndMessages();
+            } else {
+                alert("Hatalı şifre!");
+            }
         }
 
         function sendMessage() {
@@ -241,29 +335,78 @@
             const text = textInput.value.trim();
             if (text === '' || currentICName === '') return;
 
-            // Firebase Veritabanına Mesajı Kaydet
-            db.ref('messages').push({
-                user: currentICName,
-                text: text
-            });
+            // Göndermeden önce banlı mı kontrol et
+            db.ref('bannedUsers/' + currentICName).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    alert("Engellenmiş olduğunuz için mesaj gönderemezsiniz.");
+                    return;
+                }
 
-            textInput.value = '';
+                db.ref('messages').push({
+                    user: currentICName,
+                    text: text
+                });
+                textInput.value = '';
+            });
         }
 
-        function listenMessages() {
+        function deleteMessage(msgId) {
+            if (!isModerator) return;
+            if (confirm("Bu mesajı silmek istediğinize emin misiniz?")) {
+                db.ref('messages/' + msgId).remove();
+            }
+        }
+
+        function banUser(username) {
+            if (!isModerator) return;
+            if (confirm(`"${username}" adlı kullanıcıyı engellemek (banlamak) istediğinize emin misiniz?`)) {
+                // Kullanıcıyı ban listesine ekle
+                db.ref('bannedUsers/' + username).set(true);
+                // Sistemden bilgi mesajı geç
+                db.ref('messages').push({
+                    user: "Sistem",
+                    text: `⚠️ ${username} yetkili tarafından sohbetten engellendi.`
+                });
+            }
+        }
+
+        function listenBansAndMessages() {
             const messagesContainer = document.getElementById('chat-messages');
             
-            // Son gelen mesajları dinle
+            // Kullanıcının kendi ban durumunu anlık takip et
+            if (currentICName) {
+                db.ref('bannedUsers/' + currentICName).on('value', (snap) => {
+                    if (snap.exists()) {
+                        alert("Sohbet yöneticileri tarafından engellendiniz.");
+                        location.reload();
+                    }
+                });
+            }
+
+            // Mesajları dinle ve ekrana yaz
             db.ref('messages').limitToLast(50).on('value', (snapshot) => {
                 messagesContainer.innerHTML = ''; 
                 const data = snapshot.val();
                 if (data) {
-                    Object.values(data).forEach(msg => {
+                    Object.entries(data).forEach(([msgId, msg]) => {
                         const msgDiv = document.createElement('div');
                         msgDiv.className = 'chat-msg';
+                        
+                        let modButtonsHTML = '';
+                        // Eğer aktif kullanıcı moderatörse ve mesaj sistem/kendi mesajı değilse silme/banlama butonu koy
+                        if (isModerator && msg.user !== "Sistem") {
+                            modButtonsHTML = `
+                                <div class="mod-actions">
+                                    <button class="mod-btn delete" onclick="deleteMessage('${msgId}')">Sil</button>
+                                    <button class="mod-btn ban" onclick="banUser('${msg.user}')">Banla</button>
+                                </div>
+                            `;
+                        }
+
                         msgDiv.innerHTML = `
                             <div class="chat-user">${escapeHtml(msg.user)}</div>
                             <div class="chat-text">${escapeHtml(msg.text)}</div>
+                            ${modButtonsHTML}
                         `;
                         messagesContainer.appendChild(msgDiv);
                     });

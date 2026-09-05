@@ -205,7 +205,7 @@
         .room-container.active { display: grid; }
         @media (max-width: 1200px) {
             .room-container.active { grid-template-columns: 1fr 340px; }
-            .room-container.active .active-users-sidebar { display: none; } /* Küçük ekranda sidebar gizlenebilir veya aşağı kayabilir */
+            .room-container.active .active-users-sidebar { display: none; }
         }
 
         .navigation-bar {
@@ -560,7 +560,7 @@
         let currentTableId = null;
         let isModerator = false;
         const MOD_SECRET_PIN = "5092026"; 
-        let myPresenceRef = null; // Firebase Presence (Bağlantı koptuğunda veya çıkıldığında temizlik için)
+        let myPresenceRef = null;
 
         const tablesData = [
             { id: 'table_1', name: 'Blackjack Masa #1 (Standard)' },
@@ -590,7 +590,6 @@
             document.getElementById('header-user-badge').innerText = currentICName;
             document.getElementById('login-modal').style.display = 'none';
 
-            // Sisteme giriş yapıldığında Lobiye kayıt et ve presence başlat
             updatePresence('lobby');
             renderLobby();
             listenGlobalActiveUsers();
@@ -607,19 +606,16 @@
             });
         }
 
-        // Firebase Realtime Presence (Kullanıcı siteyi kapatırsa veya oda değiştirirse güncellenir)
         function updatePresence(locationId) {
             if(!currentICName) return;
 
-            // Eğer eski bir presence referansı varsa temizle
             if(myPresenceRef) {
                 myPresenceRef.remove();
             }
 
-            const userKey = currentICName.replace(/[.#$\/\[\]]/g, "_"); // Firebase key uyumluluğu
+            const userKey = currentICName.replace(/[.#$\/\[\]]/g, "_");
             myPresenceRef = db.ref(`presence/${locationId}/${userKey}`);
             
-            // Kullanıcı verisini hazırla
             const userData = {
                 name: currentICName,
                 isMod: isModerator,
@@ -628,7 +624,7 @@
             };
 
             myPresenceRef.set(userData);
-            myPresenceRef.onDisconnect().remove(); // Sekme kapanırsa otomatik sil
+            myPresenceRef.onDisconnect().remove();
         }
 
         function renderLobby() {
@@ -683,17 +679,14 @@
             document.getElementById('current-table-title').innerText = `🎥 ${tableName}`;
             document.getElementById('room-id-display').innerText = tableId;
 
-            // Bulunduğu konumu güncelle (Oda içi)
             updatePresence(tableId);
 
             listenTableData();
             listenMessages();
         }
 
-        // Lobiye Dönüş, Koltuktan Kalkış ve Kurpiyer Çıkışında Yayını Otomatik Sıfırlama
         function leaveTable() {
             if(currentTableId) {
-                // Koltuktan kalkma
                 db.ref(`tables/${currentTableId}/seats`).once('value', (snapshot) => {
                     const seats = snapshot.val() || {};
                     for(let i=1; i<=4; i++) {
@@ -703,7 +696,6 @@
                     }
                 });
 
-                // Eğer lobiye dönen kişi Kurpiyer/Moderatör ise, yayını otomatik sıfırla
                 if(isModerator) {
                     db.ref(`tables/${currentTableId}/embedCode`).remove();
                 }
@@ -711,27 +703,32 @@
 
             currentTableId = null;
             document.getElementById('room-view').classList.remove('active');
-            document.getElementById('lobby-view').style.display = 'grid'; // Grid düzeneği
+            document.getElementById('lobby-view').style.display = 'grid';
 
-            // Lokasyonu lobi olarak güncelle
             updatePresence('lobby');
         }
 
-        // Aktif Kullanıcı Listelerini Dinleme ve Render Etme
+        // Aktif Kullanıcı Listelerini Sürekli Dinleme (Real-time sync on 'presence' and 'tables')
         function listenGlobalActiveUsers() {
-            db.ref('presence').on('value', (snapshot) => {
-                const presenceData = snapshot.val() || {};
-                
-                // Lobi listesi için tüm aktifleri topla veya lobidekileri süz
-                let lobbyUsersHtml = '';
-                let roomUsersHtml = '';
+            // Sadece presence düğümünü değil, aynı zamanda tüm masaların koltuk verilerini de anlık dinliyoruz ki birisi koltuğa oturduğunda oda/lobi listesi gecikmesiz güncellensin.
+            db.ref('presence').on('value', () => {
+                updateActiveLists();
+            });
+            db.ref('tables').on('value', () => {
+                updateActiveLists();
+            });
+        }
 
-                // Tüm odalardaki koltuk durumlarını kontrol etmek için bir kereye mahsus masalara bakalım veya state tutalım
-                // Koltuk kontrolü için her masanın seats verisini anlık okuyabiliriz:
+        function updateActiveLists() {
+            db.ref('presence').once('value', (presenceSnap) => {
+                const presenceData = presenceSnap.val() || {};
+                
                 db.ref('tables').once('value', (tablesSnap) => {
                     const tablesVal = tablesSnap.val() || {};
 
-                    // Kullanıcının koltukta olup olmadığını bulmak için yardımcı fonksiyon:
+                    let lobbyUsersHtml = '';
+                    let roomUsersHtml = '';
+
                     function getUserTagAndType(username, loc) {
                         let isSeated = false;
                         if(loc !== 'lobby' && tablesVal[loc] && tablesVal[loc].seats) {
@@ -744,8 +741,6 @@
                             }
                         }
 
-                        // Kullanıcının mod olup olmadığını kontrol et (presenceData'dan)
-                        // Veya global isModerator durumu
                         let userObj = null;
                         Object.values(presenceData).forEach(locGroup => {
                             if(locGroup) {
@@ -755,15 +750,6 @@
                             }
                         });
 
-                        // İstediğin Etiket Mantığı:
-                        // 1. Kurpiyer (Login olmuşsa) -> (Kurpiyer)
-                        // 2. Koltuğa oturmuşsa -> (Katılımcı)
-                        // 3. Diğerleri -> (İzleyici)
-                        
-                        // Not: Kurpiyer genel bir roldür, eğer bu kullanıcı kurpiyer yetkisine sahipse tag kurpiyer olur.
-                        // Yönergene göre: Sohbet Tagı (İzleyici) - (Kurpiyer) - (Katılımcı)
-                        
-                        // Kullanıcının kendi mod durumu veya listedeki mod durumu:
                         let isUserMod = (username === currentICName && isModerator) || (userObj && userObj.isMod);
 
                         if(isUserMod) {
@@ -775,7 +761,7 @@
                         }
                     }
 
-                    // 1. Lobi listesi (Sadece 'lobby' konumunda olanlar)
+                    // 1. Lobi Listesi
                     if(presenceData['lobby']) {
                         Object.values(presenceData['lobby']).forEach(user => {
                             const tagInfo = getUserTagAndType(user.name, 'lobby');
@@ -789,7 +775,7 @@
                     }
                     document.getElementById('lobby-active-users-list').innerHTML = lobbyUsersHtml || '<div style="font-size:11px; color:#666; text-align:center;">Kimse yok</div>';
 
-                    // 2. Oda içi listesi (Eğer oda içindeyse, o odadaki presence kullanıcıları)
+                    // 2. Oda İçi Listesi
                     if(currentTableId && presenceData[currentTableId]) {
                         Object.values(presenceData[currentTableId]).forEach(user => {
                             const tagInfo = getUserTagAndType(user.name, currentTableId);
@@ -813,7 +799,6 @@
                 const data = snapshot.val() || {};
                 
                 const videoWrapper = document.getElementById('video-container');
-                // Default olarak W2G embed aktif değil, kurpiyer eklediyse görünür
                 if(data.embedCode && data.embedCode.trim() !== "") {
                     let embedHtml = data.embedCode;
                     if(!embedHtml.includes('<iframe')) {
@@ -860,8 +845,8 @@
 
                 document.getElementById('seat-count-badge').innerText = `Aktif Katılımcı: ${activeCount}/4`;
                 
-                // Aktif kullanıcı listesini de koltuk değişimine göre tetikle
-                listenGlobalActiveUsers();
+                // Koltuk değişikliklerinde anlık listeyi tazele
+                updateActiveLists();
             });
         }
 
@@ -892,7 +877,6 @@
             });
         }
 
-        // Masaya Özel Bağımsız Sohbet Dinleme
         function sendMessage() {
             if (localStorage.getItem('love_casino_banned') === 'true' || !currentTableId) return;
 
@@ -951,11 +935,11 @@
                     document.querySelectorAll('.mod-controls').forEach(el => el.classList.remove('active'));
                     document.getElementById('chat-panel-container').classList.remove('mod-active');
                     
-                    // Kurpiyer moddan çıktığında odadaysa yayını otomatik kapat
                     if(currentTableId) {
                         db.ref(`tables/${currentTableId}/embedCode`).remove();
                     }
-                    updatePresence(currentTableId || 'lobby'); // Presence güncelle
+                    updatePresence(currentTableId || 'lobby');
+                    updateActiveLists();
                     alert("Kurpiyer yetkisinden çıkıldı ve aktif yayın sonlandırıldı.");
                 }
                 return;
@@ -976,9 +960,8 @@
                 document.querySelectorAll('.mod-controls').forEach(el => el.classList.add('active'));
                 document.getElementById('chat-panel-container').classList.add('mod-active');
                 
-                // Presence güncelle (Kurpiyer tagı yansısın)
                 updatePresence(currentTableId || 'lobby');
-                listenGlobalActiveUsers();
+                updateActiveLists();
 
                 alert("Kurpiyer ve Moderatör yetkisi aktif edildi!");
             } else {

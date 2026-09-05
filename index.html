@@ -298,7 +298,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
             display: flex;
             flex-direction: column;
             gap: 6px;
-            min-height: 80px;
+            min-height: 95px;
             justify-content: center;
         }
         .seat-box.occupied {
@@ -307,10 +307,13 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
         }
         .seat-title { font-size: 11px; color: #888; font-weight: bold; }
         .seat-player { font-size: 13px; font-weight: bold; color: #fff; }
+        .seat-details { font-size: 11px; color: #ffb74d; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px; }
+        .seat-action-row { display: flex; gap: 4px; justify-content: center; }
         .seat-action-btn {
-            background: #198754; color: white; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;
+            background: #198754; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;
         }
         .seat-action-btn.leave { background: #dc3545; }
+        .seat-action-btn.win { background: #ffb700; color: #000; }
 
         .chat-section {
             background: rgba(20, 22, 30, 0.95); border: 2px solid #2a2d3e; border-radius: 12px;
@@ -397,6 +400,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
 </head>
 <body>
 
+    <!-- Giriş Modalı -->
     <div class="modal-overlay" id="login-modal">
         <div class="modal-box">
             <div class="modal-title">❤️ Love Casino Giriş</div>
@@ -420,6 +424,29 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
         </div>
     </div>
 
+    <!-- Koltuğa Oturma ve Bahis/IBAN Giriş Modalı -->
+    <div class="modal-overlay" id="seat-modal" style="display: none;">
+        <div class="modal-box" style="border-color: #4caf50;">
+            <div class="modal-title" style="color: #4caf50;">🎰 Koltuk <span id="target-seat-num"></span> - Bahis ve İBAN Bilgisi</div>
+            <div class="modal-desc">
+                Masaya oturabilmek ve kazanç/ödeme işlemlerinin yapılabilmesi için lütfen bahis miktarınızı ve IBAN (Hesap Numarası) bilginizi girin.
+            </div>
+            <div class="form-group">
+                <label class="form-label">Bahis Miktarı ($)</label>
+                <input type="number" id="seat-bet-input" class="modal-input" placeholder="Örn: 2000" min="1">
+            </div>
+            <div class="form-group">
+                <label class="form-label">IBAN / Hesap Numarası</label>
+                <input type="text" id="seat-iban-input" class="modal-input" placeholder="TR00 0000 0000 0000 0000 0000 00">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="modal-btn" style="background: #333;" onclick="closeSeatModal()">İptal</button>
+                <button class="modal-btn" style="background: #4caf50; color: #fff;" onclick="confirmTakeSeat()">Masaya Otur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kurpiyer / Mod Giriş Modalı -->
     <div class="modal-overlay" id="mod-login-modal" style="display: none;">
         <div class="modal-box" style="border-color: #ffb74d;">
             <div class="modal-title" style="color: #ffb74d;">🛡️ Kurpiyer / Moderatör Girişi</div>
@@ -484,7 +511,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
                     </div>
                 </div>
 
-                <!-- W2G Ekran Paylaşımı İçin Doğrudan W2G Sekmesine Yönlendiren Buton ve Bilgilendirme -->
                 <div id="w2g-screen-share-help" style="display:none; padding:10px 14px; background:rgba(255,183,77,.08); border-top:1px solid #2a2d3e; font-size:12px; color:#ccc; align-items:center; justify-content:space-between; gap:12px;">
                     <span><b style="color:#ffb74d;">Watch2Gether Ekran Paylaşımı:</b> Tarayıcı güvenlik politikaları nedeniyle ekran paylaşımı iframe içinde kısıtlanabilir. Yayıncıysanız W2G odasını ayrı sekmede açıp ekranı oradan paylaşabilirsiniz.</span>
                     <button id="open-w2g-btn" class="enter-table-btn" style="padding:7px 12px; font-size:11px; white-space:nowrap;" onclick="openW2GRoom()">W2G'yi Ayrı Sekmede Aç</button>
@@ -555,6 +581,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
         let currentTableId = null;
         let isModerator = false;
         let myPresenceRef = null;
+        let selectedSeatNum = null;
 
         const tablesData = [
             { id: 'table_1', name: 'Blackjack Masa #1 (Standard)' },
@@ -683,7 +710,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
                 db.ref(`tables/${currentTableId}/seats`).once('value', (snapshot) => {
                     const seats = snapshot.val() || {};
                     for(let i=1; i<=4; i++) {
-                        if(seats[i] === currentICName) {
+                        if(seats[i] && seats[i].name === currentICName) {
                             db.ref(`tables/${currentTableId}/seats/${i}`).remove();
                         }
                     }
@@ -721,7 +748,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
                         if(loc !== 'lobby' && tablesVal[loc] && tablesVal[loc].seats) {
                             const seats = tablesVal[loc].seats;
                             for(let s=1; s<=4; s++) {
-                                if(seats[s] === username) {
+                                if(seats[s] && seats[s].name === username) {
                                     isSeated = true;
                                     break;
                                 }
@@ -856,25 +883,39 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
                 let activeCount = 0;
 
                 for(let i=1; i<=4; i++) {
-                    const occupant = seats[i];
-                    if(occupant) activeCount++;
+                    const seatData = seats[i];
+                    const isOccupied = seatData && seatData.name;
+                    if(isOccupied) activeCount++;
 
                     const seatBox = document.createElement('div');
-                    seatBox.className = `seat-box ${occupant ? 'occupied' : ''}`;
+                    seatBox.className = `seat-box ${isOccupied ? 'occupied' : ''}`;
                     
-                    let actionBtn = '';
-                    if(occupant === currentICName) {
-                        actionBtn = `<button class="seat-action-btn leave" onclick="leaveSeat(${i})">Kalk</button>`;
-                    } else if(!occupant) {
-                        actionBtn = `<button class="seat-action-btn" onclick="takeSeat(${i})">Otur</button>`;
+                    let actionHtml = '';
+                    let detailsHtml = '';
+
+                    if(isOccupied) {
+                        detailsHtml = `<div class="seat-details">Bahis: $${seatData.bet} | İBAN: ${escapeHtml(seatData.iban)}</div>`;
+                        if(seatData.name === currentICName) {
+                            actionHtml = `<button class="seat-action-btn leave" onclick="leaveSeat(${i})">Kalk</button>`;
+                        } else if(isModerator) {
+                            actionHtml = `
+                                <div class="seat-action-row">
+                                    <button class="seat-action-btn win" onclick="payX2(${i}, '${escapeHtml(seatData.name)}', ${seatData.bet}, '${escapeHtml(seatData.iban)}')">x2 Öde</button>
+                                    <button class="seat-action-btn leave" onclick="kickSeat(${i})">Kov</button>
+                                </div>
+                            `;
+                        } else {
+                            actionHtml = `<span style="font-size:10px; color:#4caf50;">Dolu</span>`;
+                        }
                     } else {
-                        actionBtn = `<span style="font-size:10px; color:#4caf50;">Dolu</span>`;
+                        actionHtml = `<button class="seat-action-btn" onclick="openSeatModal(${i})">Otur</button>`;
                     }
 
                     seatBox.innerHTML = `
                         <div class="seat-title">KOLTUK ${i}</div>
-                        <div class="seat-player">${occupant ? occupant : 'Boş'}</div>
-                        ${actionBtn}
+                        <div class="seat-player">${isOccupied ? escapeHtml(seatData.name) : 'Boş'}</div>
+                        ${detailsHtml}
+                        ${actionHtml}
                     `;
                     seatsGrid.appendChild(seatBox);
                 }
@@ -884,22 +925,74 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
             });
         }
 
-        function takeSeat(seatNum) {
-            if(!currentTableId) return;
+        function openSeatModal(seatNum) {
+            selectedSeatNum = seatNum;
+            document.getElementById('target-seat-num').innerText = seatNum;
+            document.getElementById('seat-bet-input').value = '';
+            document.getElementById('seat-iban-input').value = '';
+            document.getElementById('seat-modal').style.display = 'flex';
+        }
+
+        function closeSeatModal() {
+            document.getElementById('seat-modal').style.display = 'none';
+            selectedSeatNum = null;
+        }
+
+        function confirmTakeSeat() {
+            if(!currentTableId || !selectedSeatNum) return;
+            const betVal = parseInt(document.getElementById('seat-bet-input').value);
+            const ibanVal = document.getElementById('seat-iban-input').value.trim();
+
+            if(isNaN(betVal) || betVal <= 0) {
+                alert("Lütfen geçerli bir bahis miktarı girin!");
+                return;
+            }
+            if(ibanVal === "") {
+                alert("Lütfen IBAN veya hesap numaranızı girin!");
+                return;
+            }
+
             db.ref(`tables/${currentTableId}/seats`).once('value', (snapshot) => {
                 const seats = snapshot.val() || {};
                 for(let i=1; i<=4; i++) {
-                    if(seats[i] === currentICName) {
+                    if(seats[i] && seats[i].name === currentICName) {
                         db.ref(`tables/${currentTableId}/seats/${i}`).remove();
                     }
                 }
-                db.ref(`tables/${currentTableId}/seats/${seatNum}`).set(currentICName);
+                
+                db.ref(`tables/${currentTableId}/seats/${selectedSeatNum}`).set({
+                    name: currentICName,
+                    bet: betVal,
+                    iban: ibanVal
+                }).then(() => {
+                    closeSeatModal();
+                });
             });
         }
 
         function leaveSeat(seatNum) {
             if(!currentTableId) return;
             db.ref(`tables/${currentTableId}/seats/${seatNum}`).remove();
+        }
+
+        function kickSeat(seatNum) {
+            if(!isModerator || !currentTableId) return;
+            if(confirm(`Koltuk ${seatNum} üzerindeki oyuncuyu masadan kaldırmak istiyor musunuz?`)) {
+                db.ref(`tables/${currentTableId}/seats/${seatNum}`).remove();
+            }
+        }
+
+        function payX2(seatNum, playerName, betAmount, playerIban) {
+            if(!isModerator || !currentTableId) return;
+            let winAmount = betAmount * 2;
+            if(confirm(`${playerName} isimli oyuncuya $${betAmount} bahis için x2 kazanç olan $${winAmount} tutarını ödemek ve sohbet/bildirim göndermek istiyor musunuz?\n\nİBAN: ${playerIban}`)) {
+                // Sohbet paneline otomatik kazanç duyurusu ekle
+                db.ref(`chats/${currentTableId}`).push({
+                    user: "Sistem (Kurpiyer)",
+                    text: `🎉 ${playerName} Blackjack masasında kazandı! Bahis: $${betAmount} | Ödenecek x2 Kazanç: $${winAmount} | İBAN: ${playerIban}`
+                });
+                alert(`${playerName} için $${winAmount} x2 ödeme duyurusu yapıldı!`);
+            }
         }
 
         function updateTableStream() {
@@ -939,7 +1032,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
                         msgDiv.className = 'chat-msg';
                         
                         let modButtons = '';
-                        if (isModerator && msg.user !== "Sistem") {
+                        if (isModerator && msg.user !== "Sistem" && !msg.user.includes("Sistem")) {
                             modButtons = `
                                 <div style="display:flex; gap:5px;">
                                     <button class="delete-msg-btn" onclick="deleteMessage('${key}')" title="Mesajı Sil">🗑️</button>

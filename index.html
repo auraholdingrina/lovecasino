@@ -780,7 +780,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
         function normalizeW2GUrl(input) {
             if (!input) return null;
             let value = input.trim();
-            // Eğer iframe kodu verilmişse içindeki src linkini ayıkla
             if (value.includes('<iframe')) {
                 const match = value.match(/src=["']([^"']+)["']/);
                 if (match && match[1]) value = match[1];
@@ -829,7 +828,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
                     if(!embedHtml.includes('<iframe')) {
                         embedHtml = `<iframe frameborder='0' width='100%' height='100%' src='${rawInput}' allowfullscreen allow='autoplay; fullscreen; camera; microphone; display-capture'></iframe>`;
                     } else {
-                        // Güvenlik izinlerinin eksiksiz eklenmesini sağla
                         if(!embedHtml.includes('display-capture')) {
                             embedHtml = embedHtml.replace('allow="', 'allow="display-capture; camera; microphone; fullscreen; ');
                         }

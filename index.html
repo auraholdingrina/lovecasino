@@ -1,3 +1,20 @@
+<?php
+// GÜVENLİK: Yönetici şifresi sadece sunucu tarafında (PHP) saklanır, tarayıcıya gönderilmez.
+define('ADMIN_PIN', '5092026');
+
+// Eğer JavaScript üzerinden şifre doğrulama isteği (AJAX/Fetch) gelirse:
+if (isset($_POST['action']) && $_POST['action'] === 'verify_pin') {
+    header('Content-Type: application/json');
+    $input_pin = isset($_POST['pin']) ? trim($_POST['pin']) : '';
+    
+    if ($input_pin === ADMIN_PIN) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false]);
+    }
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -67,7 +84,6 @@
         }
         .notice-banner span { color: #ffffff; font-weight: bold; }
 
-        /* Lobi Ekranı (Grid ve Aktif Kullanıcılar Listesi Yan Yana) */
         .lobby-main-layout {
             padding: 30px 20px;
             max-width: 1400px;
@@ -143,7 +159,6 @@
         }
         .enter-table-btn:hover { background: #d91b55; }
 
-        /* Aktif Kullanıcılar Yan Panel (Lobi ve Odalar İçin Ortak) */
         .active-users-sidebar {
             background: rgba(20, 22, 30, 0.95);
             border: 2px solid #2a2d3e;
@@ -191,7 +206,6 @@
         .tag-mod { background: rgba(255, 183, 77, 0.2); color: #ffb74d; }
         .tag-player { background: rgba(255, 42, 109, 0.2); color: #ff2a6d; }
 
-        /* Oyun Odası Ekranı */
         .room-container {
             display: none;
             grid-template-columns: 1fr 340px 280px;
@@ -238,8 +252,8 @@
             background: rgba(15, 17, 23, 0.95); padding: 12px 20px; font-size: 14px; font-weight: bold;
             color: #ffb74d; border-bottom: 1px solid #2a2d3e; display: flex; justify-content: space-between; align-items: center;
         }
-        .video-wrapper { position: relative; width: 100%; flex: 1; min-height: 400px; background: #000; }
-        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .video-wrapper { position: relative; width: 100%; height: 480px; background: #000; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
         
         .no-stream {
             position: absolute;
@@ -254,7 +268,6 @@
             font-size: 14px;
         }
 
-        /* Blackjack Koltuk Alanı */
         .blackjack-table-area {
             background: rgba(15, 17, 23, 0.9);
             border-top: 2px solid #2a2d3e;
@@ -299,7 +312,6 @@
         }
         .seat-action-btn.leave { background: #dc3545; }
 
-        /* Canlı Sohbet Paneli */
         .chat-section {
             background: rgba(20, 22, 30, 0.95); border: 2px solid #2a2d3e; border-radius: 12px;
             display: flex; flex-direction: column; height: 650px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
@@ -333,7 +345,6 @@
         }
         .chat-send-btn:hover { background: #d91b55; }
 
-        /* Modallar */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px;
@@ -386,7 +397,6 @@
 </head>
 <body>
 
-    <!-- Giriş ve Yasal Uyarı Modalı -->
     <div class="modal-overlay" id="login-modal">
         <div class="modal-box">
             <div class="modal-title">❤️ Love Casino Giriş</div>
@@ -410,7 +420,6 @@
         </div>
     </div>
 
-    <!-- Moderatör Giriş Modalı -->
     <div class="modal-overlay" id="mod-login-modal" style="display: none;">
         <div class="modal-box" style="border-color: #ffb74d;">
             <div class="modal-title" style="color: #ffb74d;">🛡️ Kurpiyer / Moderatör Girişi</div>
@@ -425,7 +434,6 @@
         </div>
     </div>
 
-    <!-- Üst Bar -->
     <header>
         <div class="logo-box" onclick="leaveTable()">
             <span>❤️</span>
@@ -442,29 +450,21 @@
         </div>
     </header>
 
-    <!-- Bilgilendirme Bandı -->
     <div class="notice-banner">
         ⚠️ <span>Yasal Uyarı:</span> Bu Casino Sitesi <b>"Rina Roleplay Platformu içerisinde IC olarak işlemektedir."</b> Gerçek dünya ile hiçbir bağı yoktur.
     </div>
 
-    <!-- 1. LOBİ EKRANI (Masa Seçimi ve Aktif Katılımcılar Listesi Yan Yana) -->
     <div class="lobby-main-layout" id="lobby-view">
         <div class="lobby-container">
             <div class="lobby-title">♣️ ♦️ Blackjack Masaları Lobisi ♠️ ♥️</div>
-            <div class="tables-grid" id="tables-grid">
-                <!-- Dinamik doldurulacak -->
-            </div>
+            <div class="tables-grid" id="tables-grid"></div>
         </div>
-        <!-- Lobi Yan Aktifler Paneli -->
         <div class="active-users-sidebar">
             <div class="sidebar-title">👥 Aktif Kullanıcılar</div>
-            <div class="users-list" id="lobby-active-users-list">
-                <!-- Dinamik -->
-            </div>
+            <div class="users-list" id="lobby-active-users-list"></div>
         </div>
     </div>
 
-    <!-- 2. OYUN ODASI EKRANI -->
     <div class="room-container" id="room-view">
         <div>
             <div class="navigation-bar">
@@ -484,26 +484,27 @@
                     </div>
                 </div>
 
-                <!-- Kurpiyer İçin Yayın Embed Ayar Alanı (Yalnızca Kurpiyer yetkisi açıkken görünür, default kapalı) -->
+                <!-- W2G Ekran Paylaşımı İçin Doğrudan W2G Sekmesine Yönlendiren Buton ve Bilgilendirme -->
+                <div id="w2g-screen-share-help" style="display:none; padding:10px 14px; background:rgba(255,183,77,.08); border-top:1px solid #2a2d3e; font-size:12px; color:#ccc; align-items:center; justify-content:space-between; gap:12px;">
+                    <span><b style="color:#ffb74d;">Watch2Gether Ekran Paylaşımı:</b> Tarayıcı güvenlik politikaları nedeniyle ekran paylaşımı iframe içinde kısıtlanabilir. Yayıncıysanız W2G odasını ayrı sekmede açıp ekranı oradan paylaşabilirsiniz.</span>
+                    <button id="open-w2g-btn" class="enter-table-btn" style="padding:7px 12px; font-size:11px; white-space:nowrap;" onclick="openW2GRoom()">W2G'yi Ayrı Sekmede Aç</button>
+                </div>
+
                 <div class="stream-config-box mod-controls" id="stream-config-bar">
                     <input type="text" id="embed-input" class="modal-input" placeholder="W2G Embed Kodunu veya URL yapıştırın..." style="font-size: 11px; padding: 6px;">
                     <button class="enter-table-btn" style="padding: 6px 12px; font-size: 11px;" onclick="updateTableStream()">Yayını Başlat / Güncelle</button>
                 </div>
 
-                <!-- Blackjack Koltuk Alanı (Sadece 4 Katılımcı) -->
                 <div class="blackjack-table-area">
                     <div class="table-info-bar">
                         <span>♠️ Blackjack Oyuncu Koltukları</span>
                         <span id="seat-count-badge">Aktif Katılımcı: 0/4</span>
                     </div>
-                    <div class="seats-grid" id="seats-grid">
-                        <!-- Koltuklar -->
-                    </div>
+                    <div class="seats-grid" id="seats-grid"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Canlı Sohbet Paneli (Masaya Özel Bağımsız) -->
         <div class="chat-section" id="chat-panel-container">
             <div class="section-header">
                 <span>💬 Masa Sohbeti</span>
@@ -529,19 +530,13 @@
             </div>
         </div>
 
-        <!-- Odaya Özel Aktif Kullanıcılar Listesi Yan Panel -->
         <div class="active-users-sidebar">
             <div class="sidebar-title">👥 Oda Aktifleri</div>
-            <div class="users-list" id="room-active-users-list">
-                <!-- Dinamik -->
-            </div>
+            <div class="users-list" id="room-active-users-list"></div>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // FIREBASE BAĞLANTI AYARLARI
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyC8bruEKra7U1QclquhN9thLyYBVrYQjJI",
             authDomain: "lovecasino.firebaseapp.com",
@@ -559,7 +554,6 @@
         let currentICName = "";
         let currentTableId = null;
         let isModerator = false;
-        const MOD_SECRET_PIN = "5092026"; 
         let myPresenceRef = null;
 
         const tablesData = [
@@ -680,7 +674,6 @@
             document.getElementById('room-id-display').innerText = tableId;
 
             updatePresence(tableId);
-
             listenTableData();
             listenMessages();
         }
@@ -708,15 +701,9 @@
             updatePresence('lobby');
         }
 
-        // Aktif Kullanıcı Listelerini Sürekli Dinleme (Real-time sync on 'presence' and 'tables')
         function listenGlobalActiveUsers() {
-            // Sadece presence düğümünü değil, aynı zamanda tüm masaların koltuk verilerini de anlık dinliyoruz ki birisi koltuğa oturduğunda oda/lobi listesi gecikmesiz güncellensin.
-            db.ref('presence').on('value', () => {
-                updateActiveLists();
-            });
-            db.ref('tables').on('value', () => {
-                updateActiveLists();
-            });
+            db.ref('presence').on('value', () => { updateActiveLists(); });
+            db.ref('tables').on('value', () => { updateActiveLists(); });
         }
 
         function updateActiveLists() {
@@ -761,7 +748,6 @@
                         }
                     }
 
-                    // 1. Lobi Listesi
                     if(presenceData['lobby']) {
                         Object.values(presenceData['lobby']).forEach(user => {
                             const tagInfo = getUserTagAndType(user.name, 'lobby');
@@ -775,7 +761,6 @@
                     }
                     document.getElementById('lobby-active-users-list').innerHTML = lobbyUsersHtml || '<div style="font-size:11px; color:#666; text-align:center;">Kimse yok</div>';
 
-                    // 2. Oda İçi Listesi
                     if(currentTableId && presenceData[currentTableId]) {
                         Object.values(presenceData[currentTableId]).forEach(user => {
                             const tagInfo = getUserTagAndType(user.name, currentTableId);
@@ -792,6 +777,41 @@
             });
         }
 
+        function normalizeW2GUrl(input) {
+            if (!input) return null;
+            let value = input.trim();
+            // Eğer iframe kodu verilmişse içindeki src linkini ayıkla
+            if (value.includes('<iframe')) {
+                const match = value.match(/src=["']([^"']+)["']/);
+                if (match && match[1]) value = match[1];
+            }
+            if (!/^(https?:\/\/)?(www\.)?(w2g\.tv|watch2gether\.com)\b/i.test(value)) return null;
+            try {
+                const url = new URL(value.startsWith('http') ? value : 'https://' + value);
+                return url.href;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function openW2GRoom() {
+            const input = document.getElementById('embed-input').value.trim();
+            const buttonUrl = document.getElementById('open-w2g-btn')?.dataset.url || '';
+            let url = normalizeW2GUrl(input) || normalizeW2GUrl(buttonUrl);
+
+            if (!url) {
+                const iframe = document.querySelector('#video-container iframe');
+                if (iframe && iframe.src) url = iframe.src;
+            }
+
+            if (!url) {
+                alert('Önce Watch2Gether oda URL adresini girin veya aktif bir W2G yayını başlatın.');
+                return;
+            }
+
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
         function listenTableData() {
             if(!currentTableId) return;
 
@@ -799,13 +819,31 @@
                 const data = snapshot.val() || {};
                 
                 const videoWrapper = document.getElementById('video-container');
+                const w2gHelp = document.getElementById('w2g-screen-share-help');
+
                 if(data.embedCode && data.embedCode.trim() !== "") {
-                    let embedHtml = data.embedCode;
+                    let rawInput = data.embedCode.trim();
+                    const w2gUrl = normalizeW2GUrl(rawInput);
+                    
+                    let embedHtml = rawInput;
                     if(!embedHtml.includes('<iframe')) {
-                        embedHtml = `<iframe frameborder='0' width='100%' height='100%' src='${data.embedCode}' allowfullscreen allow='autoplay; fullscreen; camera; microphone;'></iframe>`;
+                        embedHtml = `<iframe frameborder='0' width='100%' height='100%' src='${rawInput}' allowfullscreen allow='autoplay; fullscreen; camera; microphone; display-capture'></iframe>`;
+                    } else {
+                        // Güvenlik izinlerinin eksiksiz eklenmesini sağla
+                        if(!embedHtml.includes('display-capture')) {
+                            embedHtml = embedHtml.replace('allow="', 'allow="display-capture; camera; microphone; fullscreen; ');
+                        }
                     }
                     videoWrapper.innerHTML = embedHtml;
+
+                    if (w2gUrl) {
+                        w2gHelp.style.display = 'flex';
+                        document.getElementById('open-w2g-btn').dataset.url = w2gUrl;
+                    } else {
+                        w2gHelp.style.display = 'none';
+                    }
                 } else {
+                    w2gHelp.style.display = 'none';
                     videoWrapper.innerHTML = `
                         <div class="no-stream" id="no-stream-screen">
                             <span>🔴 Bu masada şu an aktif yayın bulunmuyor.</span>
@@ -844,8 +882,6 @@
                 }
 
                 document.getElementById('seat-count-badge').innerText = `Aktif Katılımcı: ${activeCount}/4`;
-                
-                // Koltuk değişikliklerinde anlık listeyi tazele
                 updateActiveLists();
             });
         }
@@ -952,21 +988,28 @@
         }
 
         function verifyMod() {
-            const pin = document.getElementById('mod-pass-input').value;
-            if (pin === MOD_SECRET_PIN) {
-                isModerator = true;
-                document.getElementById('mod-login-modal').style.display = 'none';
-                document.getElementById('mod-pass-input').value = '';
-                document.querySelectorAll('.mod-controls').forEach(el => el.classList.add('active'));
-                document.getElementById('chat-panel-container').classList.add('mod-active');
-                
-                updatePresence(currentTableId || 'lobby');
-                updateActiveLists();
+            const inputPin = document.getElementById('mod-pass-input').value.trim();
+            if(!inputPin) return;
 
-                alert("Kurpiyer ve Moderatör yetkisi aktif edildi!");
-            } else {
-                alert("Hatalı Şifre!");
-            }
+            db.ref('settings/modPin').once('value').then((snapshot) => {
+                const correctPin = snapshot.val();
+                const activePin = correctPin ? correctPin : "5092026";
+
+                if (inputPin === activePin) {
+                    isModerator = true;
+                    document.getElementById('mod-login-modal').style.display = 'none';
+                    document.getElementById('mod-pass-input').value = '';
+                    document.querySelectorAll('.mod-controls').forEach(el => el.classList.add('active'));
+                    document.getElementById('chat-panel-container').classList.add('mod-active');
+                    
+                    updatePresence(currentTableId || 'lobby');
+                    updateActiveLists();
+
+                    alert("Kurpiyer ve Moderatör yetkisi aktif edildi!");
+                } else {
+                    alert("Hatalı Şifre!");
+                }
+            });
         }
 
         function deleteMessage(messageKey) {

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Casino - Canlı Yayın ve Watch2Gether Odası</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Üst Menü / Logo Alanı */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(20, 22, 30, 0.95);
+            border-bottom: 2px solid #ff2a6d;
+            padding: 12px 25px;
+            box-shadow: 0 0 20px rgba(255, 42, 109, 0.4);
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-box span {
+            font-size: 24px;
+        }
+
+        .logo-title {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+
+        .logo-subtitle {
+            font-size: 10px;
+            color: #ffb700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .room-status {
+            font-size: 13px;
+            font-weight: bold;
+            color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #4caf50;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        /* Bilgilendirme Bandı (Site İçinde Sabit Alan) */
+        .notice-banner {
+            background: rgba(40, 20, 30, 0.9);
+            border-bottom: 1px solid #ff2a6d;
+            padding: 8px 20px;
+            font-size: 12px;
+            text-align: center;
+            color: #ffb74d;
+            letter-spacing: 0.5px;
+        }
+
+        .notice-banner span {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        /* Ana İçerik Konteyneri (Grid Düzeni) */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Watch2Gether Video Alanı */
+        .w2g-section {
+            background: rgba(20, 22, 30, 0.95);
+            border: 2px solid #2a2d3e;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+        }
+
+        .section-header {
+            background: rgba(15, 17, 23, 0.95);
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffb74d;
+            border-bottom: 1px solid #2a2d3e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            min-height: 550px;
+            background: #000;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Canlı Sohbet Paneli */
+        .chat-section {
+            background: rgba(20, 22, 30, 0.95);
+            border: 2px solid #2a2d3e;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            height: 620px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .chat-msg {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #ff2a6d;
+            padding: 8px 10px;
+            border-radius: 4px;
+            word-break: break-word;
+        }
+
+        .chat-user {
+            font-weight: bold;
+            color: #ffb74d;
+            margin-bottom: 2px;
+            font-size: 12px;
+        }
+
+        .chat-text {
+            color: #e0e0e0;
+        }
+
+        /* Sohbet Girdi Alanı */
+        .chat-input-area {
+            padding: 12px;
+            background: rgba(15, 17, 23, 0.95);
+            border-top: 1px solid #2a2d3e;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #000;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #ff2a6d;
+        }
+
+        .chat-send-btn {
+            background: #ff2a6d;
+            color: #fff;
+            border: none;
+            padding: 0 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            background: #d91b55;
+        }
+
+        /* Giriş ve Yasal Uyarı Modalı */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: rgba(20, 22, 30, 0.98);
+            border: 2px solid #ff2a6d;
+            border-radius: 14px;
+            padding: 30px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 0 30px rgba(255, 42, 109, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-desc {
+            font-size: 12px;
+            color: #b0aabf;
+            line-height: 1.5;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #ffb700;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffb74d;
+        }
+
+        .modal-input {
+            background: #000;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #ff2a6d;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 12px;
+            color: #ccc;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-container input {
+            margin-top: 2px;
+            accent-color: #ff2a6d;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .modal-btn {
+            background: #ff2a6d;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-btn:hover {
+            background: #d91b55;
+        }
+
+        .modal-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- IC İsim ve Yasal Uyarı Modalı (Sohbete Katılmadan Önce Zorunlu) -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-box">
+            <div class="modal-title">❤️ Love Casino Giriş</div>
+            <div class="modal-desc">
+                Türkiye Cumhuriyeti kanunlarına göre gerçek dünya (RL) kumar ve şans oyunları yasaktır. 
+                Bu platform üzerinde gerçekleştirilen tüm casino faaliyetleri ve yayınlar tamamen kurgusal olup, 
+                <b>Rina Roleplay Platformu içerisinde IC (In-Character) olarak işlemektedir.</b>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">IC İsim veya Takma İsim</label>
+                <input type="text" id="modal-username" class="modal-input" placeholder="Örn: Elisa Briones">
+            </div>
+
+            <label class="checkbox-container">
+                <input type="checkbox" id="modal-agreement" onchange="toggleEnterButton()">
+                <span>Yukarıdaki şartları, bu sitenin Rina Roleplay platformunda IC bir rol alanı olduğunu ve Türkiye'deki yasal kısıtlamalar nedeniyle tamamen rol amaçlı olduğunu onaylıyorum.</span>
+            </label>
+
+            <button id="enter-btn" class="modal-btn" disabled onclick="joinChat()">Sohbete Katıl</button>
+        </div>
+    </div>
+
+    <!-- Üst Bar -->
+    <header>
+        <div class="logo-box">
+            <span>❤️</span>
+            <div>
+                <div class="logo-title">Love Casino</div>
+                <div class="logo-subtitle">Watch2Gether Room</div>
+            </div>
+        </div>
+        <div class="room-status">
+            <div class="status-dot"></div> Canlı Yayın Aktif
+        </div>
+    </header>
+
+    <!-- Bilgilendirme Bandı -->
+    <div class="notice-banner">
+        ⚠️ <span>Yasal Uyarı:</span> Bu Casino Sitesi <b>"Rina Roleplay Platformu içerisinde IC olarak işlemektedir."</b> Gerçek dünya ile hiçbir bağı yoktur.
+    </div>
+
+    <!-- Ana Konteyner -->
+    <div class="main-container">
+        <!-- Watch2Gether Entegrasyonu -->
+        <div class="w2g-section">
+            <div class="section-header">
+                <span>🎥 Watch2Gether Ortak İzleme Alanı</span>
+                <span style="font-size: 11px; color: #888;">Oda ID: y2mszk9x9yjxsrzaf7</span>
+            </div>
+            <div class="video-wrapper">
+                <iframe src="https://w2g.tv/embed?room_id=y2mszk9x9yjxsrzaf7" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay; fullscreen; camera; microphone;"></iframe>
+            </div>
+        </div>
+
+        <!-- Canlı Sohbet Paneli -->
+        <div class="chat-section">
+            <div class="section-header">
+                <span>💬 Canlı Sohbet (<span id="active-user-display">Misafir</span>)</span>
+                <span style="font-size: 11px; color: #888;">IC Sohbet</span>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-msg">
+                    <div class="chat-user">Sistem</div>
+                    <div class="chat-text">Love Casino Watch2Gether odasına hoş geldiniz! Sohbet başlatıldı.</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-text-input" class="chat-input" placeholder="IC mesajınızı yazın..." onkeypress="checkEnter(event)">
+                <button class="chat-send-btn" onclick="sendMessage()">Gönder</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentICName = "";
+
+        // Onay kutusu ve isim kontrolü
+        function toggleEnterButton() {
+            const username = document.getElementById('modal-username').value.trim();
+            const agreement = document.getElementById('modal-agreement').checked;
+            const enterBtn = document.getElementById('enter-btn');
+
+            if (username !== "" && agreement) {
+                enterBtn.disabled = false;
+            } else {
+                enterBtn.disabled = true;
+            }
+        }
+
+        // İsim input değiştiğinde de butonu tetikle
+        document.getElementById('modal-username').addEventListener('input', toggleEnterButton);
+
+        // Sohbet odasına giriş yapma
+        function joinChat() {
+            const usernameInput = document.getElementById('modal-username').value.trim();
+            if (usernameInput === "") return;
+
+            currentICName = usernameInput;
+            document.getElementById('active-user-display').innerText = currentICName;
+            
+            // Modalı gizle
+            document.getElementById('login-modal').style.display = 'none';
+
+            // Hoşgeldin mesajı ekle
+            const messagesContainer = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg';
+            msgDiv.innerHTML = `
+                <div class="chat-user">Sistem</div>
+                <div class="chat-text"><b>${escapeHtml(currentICName)}</b> sohbet odasına katıldı. İyi eğlenceler!</div>
+            `;
+            messagesContainer.appendChild(msgDiv);
+        }
+
+        // Mesaj Gönderme
+        function sendMessage() {
+            const textInput = document.getElementById('chat-text-input');
+            const messagesContainer = document.getElementById('chat-messages');
+
+            const text = textInput.value.trim();
+            if (text === '' || currentICName === '') return;
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg';
+            msgDiv.innerHTML = `
+                <div class="chat-user">${escapeHtml(currentICName)}</div>
+                <div class="chat-text">${escapeHtml(text)}</div>
+            `;
+
+            messagesContainer.appendChild(msgDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            textInput.value = '';
+        }
+
+        function checkEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function escapeHtml(string) {
+            return string.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

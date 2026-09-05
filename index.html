@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Love Casino - Canlı Yayın ve Watch2Gether Odası</title>
+    <title>Love Casino - Blackjack Masaları ve Canlı Yayın</title>
     <!-- Firebase SDK (Google CDN) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -28,7 +28,7 @@
             padding: 12px 25px;
             box-shadow: 0 0 20px rgba(255, 42, 109, 0.4);
         }
-        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo-box { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-box span { font-size: 24px; }
         .logo-title { font-size: 18px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; }
         .logo-subtitle { font-size: 10px; color: #ffb700; letter-spacing: 3px; text-transform: uppercase; }
@@ -67,13 +67,170 @@
         }
         .notice-banner span { color: #ffffff; font-weight: bold; }
 
-        .main-container {
-            display: grid; grid-template-columns: 1fr 340px; gap: 20px;
-            padding: 20px; flex: 1; max-width: 1600px; margin: 0 auto; width: 100%;
+        /* Lobi Ekranı (Grid ve Aktif Kullanıcılar Listesi Yan Yana) */
+        .lobby-main-layout {
+            padding: 30px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
         }
-        @media (max-width: 1024px) { .main-container { grid-template-columns: 1fr; } }
+        @media (max-width: 1024px) {
+            .lobby-main-layout { grid-template-columns: 1fr; }
+        }
 
-        .w2g-section {
+        .lobby-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .lobby-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #ffb74d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #2a2d3e;
+            padding-bottom: 10px;
+        }
+        .tables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .table-card {
+            background: rgba(20, 22, 30, 0.95);
+            border: 2px solid #2a2d3e;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+        }
+        .table-card:hover {
+            border-color: #ff2a6d;
+            transform: translateY(-5px);
+        }
+        .table-card-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-card-info {
+            font-size: 13px;
+            color: #aaa;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .enter-table-btn {
+            background: #ff2a6d;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.2s;
+        }
+        .enter-table-btn:hover { background: #d91b55; }
+
+        /* Aktif Kullanıcılar Yan Panel (Lobi ve Odalar İçin Ortak) */
+        .active-users-sidebar {
+            background: rgba(20, 22, 30, 0.95);
+            border: 2px solid #2a2d3e;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 650px;
+        }
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffb74d;
+            border-bottom: 1px solid #2a2d3e;
+            padding-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .users-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .user-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid #4caf50;
+        }
+        .user-item.mod { border-left-color: #ffb74d; }
+        .user-item.player { border-left-color: #ff2a6d; }
+        .user-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .tag-watcher { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        .tag-mod { background: rgba(255, 183, 77, 0.2); color: #ffb74d; }
+        .tag-player { background: rgba(255, 42, 109, 0.2); color: #ff2a6d; }
+
+        /* Oyun Odası Ekranı */
+        .room-container {
+            display: none;
+            grid-template-columns: 1fr 340px 280px;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            max-width: 1750px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .room-container.active { display: grid; }
+        @media (max-width: 1200px) {
+            .room-container.active { grid-template-columns: 1fr 340px; }
+            .room-container.active .active-users-sidebar { display: none; } /* Küçük ekranda sidebar gizlenebilir veya aşağı kayabilir */
+        }
+
+        .navigation-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .back-lobby-btn {
+            background: #2a2d3e;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .back-lobby-btn:hover { background: #3a3d5e; }
+
+        .stream-section {
             background: rgba(20, 22, 30, 0.95); border: 2px solid #2a2d3e; border-radius: 12px;
             overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
         }
@@ -81,12 +238,71 @@
             background: rgba(15, 17, 23, 0.95); padding: 12px 20px; font-size: 14px; font-weight: bold;
             color: #ffb74d; border-bottom: 1px solid #2a2d3e; display: flex; justify-content: space-between; align-items: center;
         }
-        .video-wrapper { position: relative; width: 100%; flex: 1; min-height: 550px; background: #000; }
+        .video-wrapper { position: relative; width: 100%; flex: 1; min-height: 400px; background: #000; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        
+        .no-stream {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #0b0c10;
+            color: #888;
+            gap: 10px;
+            font-size: 14px;
+        }
 
+        /* Blackjack Koltuk Alanı */
+        .blackjack-table-area {
+            background: rgba(15, 17, 23, 0.9);
+            border-top: 2px solid #2a2d3e;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .table-info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: bold;
+            color: #ffb74d;
+        }
+        .seats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .seat-box {
+            background: rgba(20, 22, 30, 0.8);
+            border: 1px solid #2a2d3e;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 80px;
+            justify-content: center;
+        }
+        .seat-box.occupied {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.05);
+        }
+        .seat-title { font-size: 11px; color: #888; font-weight: bold; }
+        .seat-player { font-size: 13px; font-weight: bold; color: #fff; }
+        .seat-action-btn {
+            background: #198754; color: white; border: none; padding: 4px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;
+        }
+        .seat-action-btn.leave { background: #dc3545; }
+
+        /* Canlı Sohbet Paneli */
         .chat-section {
             background: rgba(20, 22, 30, 0.95); border: 2px solid #2a2d3e; border-radius: 12px;
-            display: flex; flex-direction: column; height: 620px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            display: flex; flex-direction: column; height: 650px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
         }
         .chat-messages {
             flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 13px;
@@ -157,6 +373,15 @@
             background: #d32f2f; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;
         }
         .clear-chat-btn:hover { background: #b71c1c; }
+
+        .stream-config-box {
+            margin-top: 10px;
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -181,16 +406,16 @@
                 <span>Yukarıdaki şartları, bu sitenin Rina Roleplay platformunda IC bir rol alanı olduğunu ve tamamen rol amaçlı olduğunu onaylıyorum.</span>
             </label>
 
-            <button id="enter-btn" class="modal-btn" disabled onclick="joinChat()">Sohbete Katıl</button>
+            <button id="enter-btn" class="modal-btn" disabled onclick="joinApp()">Sisteme Giriş Yap</button>
         </div>
     </div>
 
     <!-- Moderatör Giriş Modalı -->
     <div class="modal-overlay" id="mod-login-modal" style="display: none;">
         <div class="modal-box" style="border-color: #ffb74d;">
-            <div class="modal-title" style="color: #ffb74d;">🛡️ Moderatör Girişi</div>
+            <div class="modal-title" style="color: #ffb74d;">🛡️ Kurpiyer / Moderatör Girişi</div>
             <div class="form-group">
-                <label class="form-label">Moderatör Şifresi (PIN)</label>
+                <label class="form-label">Yönetici Şifresi (PIN)</label>
                 <input type="password" id="mod-pass-input" class="modal-input" placeholder="Şifrenizi girin">
             </div>
             <div style="display: flex; gap: 10px;">
@@ -202,17 +427,17 @@
 
     <!-- Üst Bar -->
     <header>
-        <div class="logo-box">
+        <div class="logo-box" onclick="leaveTable()">
             <span>❤️</span>
             <div>
                 <div class="logo-title">Love Casino</div>
-                <div class="logo-subtitle">Watch2Gether Room</div>
+                <div class="logo-subtitle">Blackjack Masaları</div>
             </div>
         </div>
         <div class="header-right">
-            <button class="mod-btn" onclick="openModModal()">🛡️ Mod Paneli</button>
+            <button class="mod-btn" onclick="openModModal()">🛡️ Kurpiyer / Mod Paneli</button>
             <div class="room-status">
-                <div class="status-dot"></div> Canlı Yayın Aktif
+                <div class="status-dot"></div> <span id="header-user-badge">Misafir</span>
             </div>
         </div>
     </header>
@@ -222,43 +447,93 @@
         ⚠️ <span>Yasal Uyarı:</span> Bu Casino Sitesi <b>"Rina Roleplay Platformu içerisinde IC olarak işlemektedir."</b> Gerçek dünya ile hiçbir bağı yoktur.
     </div>
 
-    <!-- Ana Konteyner -->
-    <div class="main-container">
-        <!-- Watch2Gether Entegrasyonu -->
-        <div class="w2g-section">
-            <div class="section-header">
-                <span>🎥 Watch2Gether Ortak İzleme Alanı</span>
-                <span style="font-size: 11px; color: #888;">Oda ID: y2mszk9x9yjxsrzaf7</span>
+    <!-- 1. LOBİ EKRANI (Masa Seçimi ve Aktif Katılımcılar Listesi Yan Yana) -->
+    <div class="lobby-main-layout" id="lobby-view">
+        <div class="lobby-container">
+            <div class="lobby-title">♣️ ♦️ Blackjack Masaları Lobisi ♠️ ♥️</div>
+            <div class="tables-grid" id="tables-grid">
+                <!-- Dinamik doldurulacak -->
             </div>
-            <div class="video-wrapper">
-                <iframe src="https://w2g.tv/embed?room_id=y2mszk9x9yjxsrzaf7" frameborder="0" width="100%" height="100%" allowfullscreen allow="autoplay; fullscreen; camera; microphone;"></iframe>
+        </div>
+        <!-- Lobi Yan Aktifler Paneli -->
+        <div class="active-users-sidebar">
+            <div class="sidebar-title">👥 Aktif Kullanıcılar</div>
+            <div class="users-list" id="lobby-active-users-list">
+                <!-- Dinamik -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. OYUN ODASI EKRANI -->
+    <div class="room-container" id="room-view">
+        <div>
+            <div class="navigation-bar">
+                <button class="back-lobby-btn" onclick="leaveTable()">⬅️ Masalara / Lobiye Dön</button>
+            </div>
+            
+            <div class="stream-section">
+                <div class="section-header">
+                    <span id="current-table-title">🎥 Blackjack Masası</span>
+                    <span style="font-size: 11px; color: #888;" id="room-id-display">Oda</span>
+                </div>
+                
+                <div class="video-wrapper" id="video-container">
+                    <div class="no-stream" id="no-stream-screen">
+                        <span>🔴 Bu masada şu an aktif yayın bulunmuyor.</span>
+                        <span style="font-size: 11px; color: #555;">Kurpiyer yayını başlattığında otomatik görünecektir.</span>
+                    </div>
+                </div>
+
+                <!-- Kurpiyer İçin Yayın Embed Ayar Alanı (Yalnızca Kurpiyer yetkisi açıkken görünür, default kapalı) -->
+                <div class="stream-config-box mod-controls" id="stream-config-bar">
+                    <input type="text" id="embed-input" class="modal-input" placeholder="W2G Embed Kodunu veya URL yapıştırın..." style="font-size: 11px; padding: 6px;">
+                    <button class="enter-table-btn" style="padding: 6px 12px; font-size: 11px;" onclick="updateTableStream()">Yayını Başlat / Güncelle</button>
+                </div>
+
+                <!-- Blackjack Koltuk Alanı (Sadece 4 Katılımcı) -->
+                <div class="blackjack-table-area">
+                    <div class="table-info-bar">
+                        <span>♠️ Blackjack Oyuncu Koltukları</span>
+                        <span id="seat-count-badge">Aktif Katılımcı: 0/4</span>
+                    </div>
+                    <div class="seats-grid" id="seats-grid">
+                        <!-- Koltuklar -->
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Canlı Sohbet Paneli -->
+        <!-- Canlı Sohbet Paneli (Masaya Özel Bağımsız) -->
         <div class="chat-section" id="chat-panel-container">
             <div class="section-header">
-                <span>💬 Canlı Sohbet (<span id="active-user-display">Misafir</span>)</span>
+                <span>💬 Masa Sohbeti</span>
                 <span style="font-size: 11px; color: #888;">IC Sohbet</span>
             </div>
             
-            <!-- Moderatör Özel Kontrol Çubuğu -->
             <div class="mod-controls" id="mod-action-bar">
-                <span style="font-size: 12px; font-weight: bold; color: #ffb74d;">🛡️ Mod Modu Açık</span>
-                <button class="clear-chat-btn" onclick="clearAllChat()">🗑️ Tüm Sohbeti Temizle</button>
+                <span style="font-size: 11px; font-weight: bold; color: #ffb74d;">🛡️ Kurpiyer Modu</span>
+                <button class="clear-chat-btn" onclick="clearAllChat()">🗑️ Sohbeti Temizle</button>
             </div>
 
             <div class="chat-messages" id="chat-messages">
                 <div class="chat-msg">
                     <div class="msg-content">
                         <div class="chat-user">Sistem</div>
-                        <div class="chat-text">Love Casino Watch2Gether odasına hoş geldiniz! Sohbet başlatıldı.</div>
+                        <div class="chat-text">Masaya hoş geldiniz! Sohbet sadece bu masadakilere özeldir.</div>
                     </div>
                 </div>
             </div>
             <div class="chat-input-area">
                 <input type="text" id="chat-text-input" class="chat-input" placeholder="IC mesajınızı yazın..." onkeypress="checkEnter(event)">
                 <button class="chat-send-btn" onclick="sendMessage()">Gönder</button>
+            </div>
+        </div>
+
+        <!-- Odaya Özel Aktif Kullanıcılar Listesi Yan Panel -->
+        <div class="active-users-sidebar">
+            <div class="sidebar-title">👥 Oda Aktifleri</div>
+            <div class="users-list" id="room-active-users-list">
+                <!-- Dinamik -->
             </div>
         </div>
     </div>
@@ -282,8 +557,17 @@
         const db = firebase.database();
 
         let currentICName = "";
+        let currentTableId = null;
         let isModerator = false;
-        const MOD_SECRET_PIN = "5092026"; // Buraya kendi belirleyeceğin moderatör şifresini yazabilirsin
+        const MOD_SECRET_PIN = "5092026"; 
+        let myPresenceRef = null; // Firebase Presence (Bağlantı koptuğunda veya çıkıldığında temizlik için)
+
+        const tablesData = [
+            { id: 'table_1', name: 'Blackjack Masa #1 (Standard)' },
+            { id: 'table_2', name: 'Blackjack Masa #2 (Standard)' },
+            { id: 'table_3', name: 'Blackjack Masa #3 (Standard)' },
+            { id: 'table_4', name: 'Blackjack Masa #4 (Standard)' }
+        ];
 
         function toggleEnterButton() {
             const username = document.getElementById('modal-username').value.trim();
@@ -293,27 +577,23 @@
 
         document.getElementById('modal-username').addEventListener('input', toggleEnterButton);
 
-        function joinChat() {
+        function joinApp() {
             const usernameInput = document.getElementById('modal-username').value.trim();
             if (usernameInput === "") return;
 
-            // Ban kontrolü (LocalStorage üzerinden)
             if (localStorage.getItem('love_casino_banned') === 'true') {
-                alert("Bu sohbetten engellendiniz!");
+                alert("Bu platformdan engellendiniz!");
                 return;
             }
 
             currentICName = usernameInput;
-            document.getElementById('active-user-display').innerText = currentICName;
+            document.getElementById('header-user-badge').innerText = currentICName;
             document.getElementById('login-modal').style.display = 'none';
 
-            // Katılım mesajı
-            db.ref('messages').push({
-                user: "Sistem",
-                text: `${currentICName} sohbet odasına katıldı. İyi eğlenceler!`
-            });
-
-            listenMessages();
+            // Sisteme giriş yapıldığında Lobiye kayıt et ve presence başlat
+            updatePresence('lobby');
+            renderLobby();
+            listenGlobalActiveUsers();
             checkBannedStatus();
         }
 
@@ -321,23 +601,306 @@
             db.ref('bans/' + encodeURIComponent(currentICName)).on('value', (snapshot) => {
                 if (snapshot.val() === true) {
                     localStorage.setItem('love_casino_banned', 'true');
-                    alert("Yönetici tarafından bu sohbetten engellendiniz.");
+                    alert("Yönetici tarafından engellendiniz.");
                     location.reload();
                 }
             });
         }
 
-        function sendMessage() {
-            if (localStorage.getItem('love_casino_banned') === 'true') {
-                alert("Engellendiğiniz için mesaj gönderemezsiniz.");
-                return;
+        // Firebase Realtime Presence (Kullanıcı siteyi kapatırsa veya oda değiştirirse güncellenir)
+        function updatePresence(locationId) {
+            if(!currentICName) return;
+
+            // Eğer eski bir presence referansı varsa temizle
+            if(myPresenceRef) {
+                myPresenceRef.remove();
             }
+
+            const userKey = currentICName.replace(/[.#$\/\[\]]/g, "_"); // Firebase key uyumluluğu
+            myPresenceRef = db.ref(`presence/${locationId}/${userKey}`);
+            
+            // Kullanıcı verisini hazırla
+            const userData = {
+                name: currentICName,
+                isMod: isModerator,
+                location: locationId,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            myPresenceRef.set(userData);
+            myPresenceRef.onDisconnect().remove(); // Sekme kapanırsa otomatik sil
+        }
+
+        function renderLobby() {
+            const grid = document.getElementById('tables-grid');
+            grid.innerHTML = '';
+
+            tablesData.forEach(table => {
+                db.ref(`tables/${table.id}`).on('value', (snapshot) => {
+                    const data = snapshot.val() || {};
+                    const seats = data.seats || {};
+                    let occupiedCount = 0;
+                    for(let i=1; i<=4; i++) {
+                        if(seats[i]) occupiedCount++;
+                    }
+
+                    let card = document.getElementById(`card_${table.id}`);
+                    if(!card) {
+                        card = document.createElement('div');
+                        card.className = 'table-card';
+                        card.id = `card_${table.id}`;
+                        card.innerHTML = `
+                            <div class="table-card-header">
+                                <span>${table.name}</span>
+                                <span style="font-size: 12px;" id="status_badge_${table.id}">○ Yayın Yok</span>
+                            </div>
+                            <div class="table-card-info">
+                                <span>Oyun: Blackjack (Klasik)</span>
+                                <span id="occupancy_${table.id}">Aktif Katılımcı: ${occupiedCount}/4</span>
+                            </div>
+                            <button class="enter-table-btn" onclick="enterTable('${table.id}', '${table.name}')">Masaya Otur / Katıl</button>
+                        `;
+                        grid.appendChild(card);
+                    } else {
+                        document.getElementById(`occupancy_${table.id}`).innerText = `Aktif Katılımcı: ${occupiedCount}/4`;
+                        const statusBadge = document.getElementById(`status_badge_${table.id}`);
+                        if(data.embedCode && data.embedCode.trim() !== "") {
+                            statusBadge.style.color = '#4caf50';
+                            statusBadge.innerText = '● Yayında';
+                        } else {
+                            statusBadge.style.color = '#888';
+                            statusBadge.innerText = '○ Yayın Yok';
+                        }
+                    }
+                });
+            });
+        }
+
+        function enterTable(tableId, tableName) {
+            currentTableId = tableId;
+            document.getElementById('lobby-view').style.display = 'none';
+            document.getElementById('room-view').classList.add('active');
+            document.getElementById('current-table-title').innerText = `🎥 ${tableName}`;
+            document.getElementById('room-id-display').innerText = tableId;
+
+            // Bulunduğu konumu güncelle (Oda içi)
+            updatePresence(tableId);
+
+            listenTableData();
+            listenMessages();
+        }
+
+        // Lobiye Dönüş, Koltuktan Kalkış ve Kurpiyer Çıkışında Yayını Otomatik Sıfırlama
+        function leaveTable() {
+            if(currentTableId) {
+                // Koltuktan kalkma
+                db.ref(`tables/${currentTableId}/seats`).once('value', (snapshot) => {
+                    const seats = snapshot.val() || {};
+                    for(let i=1; i<=4; i++) {
+                        if(seats[i] === currentICName) {
+                            db.ref(`tables/${currentTableId}/seats/${i}`).remove();
+                        }
+                    }
+                });
+
+                // Eğer lobiye dönen kişi Kurpiyer/Moderatör ise, yayını otomatik sıfırla
+                if(isModerator) {
+                    db.ref(`tables/${currentTableId}/embedCode`).remove();
+                }
+            }
+
+            currentTableId = null;
+            document.getElementById('room-view').classList.remove('active');
+            document.getElementById('lobby-view').style.display = 'grid'; // Grid düzeneği
+
+            // Lokasyonu lobi olarak güncelle
+            updatePresence('lobby');
+        }
+
+        // Aktif Kullanıcı Listelerini Dinleme ve Render Etme
+        function listenGlobalActiveUsers() {
+            db.ref('presence').on('value', (snapshot) => {
+                const presenceData = snapshot.val() || {};
+                
+                // Lobi listesi için tüm aktifleri topla veya lobidekileri süz
+                let lobbyUsersHtml = '';
+                let roomUsersHtml = '';
+
+                // Tüm odalardaki koltuk durumlarını kontrol etmek için bir kereye mahsus masalara bakalım veya state tutalım
+                // Koltuk kontrolü için her masanın seats verisini anlık okuyabiliriz:
+                db.ref('tables').once('value', (tablesSnap) => {
+                    const tablesVal = tablesSnap.val() || {};
+
+                    // Kullanıcının koltukta olup olmadığını bulmak için yardımcı fonksiyon:
+                    function getUserTagAndType(username, loc) {
+                        let isSeated = false;
+                        if(loc !== 'lobby' && tablesVal[loc] && tablesVal[loc].seats) {
+                            const seats = tablesVal[loc].seats;
+                            for(let s=1; s<=4; s++) {
+                                if(seats[s] === username) {
+                                    isSeated = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Kullanıcının mod olup olmadığını kontrol et (presenceData'dan)
+                        // Veya global isModerator durumu
+                        let userObj = null;
+                        Object.values(presenceData).forEach(locGroup => {
+                            if(locGroup) {
+                                Object.values(locGroup).forEach(u => {
+                                    if(u.name === username && u.isMod) userObj = u;
+                                });
+                            }
+                        });
+
+                        // İstediğin Etiket Mantığı:
+                        // 1. Kurpiyer (Login olmuşsa) -> (Kurpiyer)
+                        // 2. Koltuğa oturmuşsa -> (Katılımcı)
+                        // 3. Diğerleri -> (İzleyici)
+                        
+                        // Not: Kurpiyer genel bir roldür, eğer bu kullanıcı kurpiyer yetkisine sahipse tag kurpiyer olur.
+                        // Yönergene göre: Sohbet Tagı (İzleyici) - (Kurpiyer) - (Katılımcı)
+                        
+                        // Kullanıcının kendi mod durumu veya listedeki mod durumu:
+                        let isUserMod = (username === currentICName && isModerator) || (userObj && userObj.isMod);
+
+                        if(isUserMod) {
+                            return { text: 'Kurpiyer', class: 'tag-mod', type: 'mod' };
+                        } else if(isSeated) {
+                            return { text: 'Katılımcı', class: 'tag-player', type: 'player' };
+                        } else {
+                            return { text: 'İzleyici', class: 'tag-watcher', type: 'watcher' };
+                        }
+                    }
+
+                    // 1. Lobi listesi (Sadece 'lobby' konumunda olanlar)
+                    if(presenceData['lobby']) {
+                        Object.values(presenceData['lobby']).forEach(user => {
+                            const tagInfo = getUserTagAndType(user.name, 'lobby');
+                            lobbyUsersHtml += `
+                                <div class="user-item ${tagInfo.type}">
+                                    <span>${escapeHtml(user.name)}</span>
+                                    <span class="user-tag ${tagInfo.class}">${tagInfo.text}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                    document.getElementById('lobby-active-users-list').innerHTML = lobbyUsersHtml || '<div style="font-size:11px; color:#666; text-align:center;">Kimse yok</div>';
+
+                    // 2. Oda içi listesi (Eğer oda içindeyse, o odadaki presence kullanıcıları)
+                    if(currentTableId && presenceData[currentTableId]) {
+                        Object.values(presenceData[currentTableId]).forEach(user => {
+                            const tagInfo = getUserTagAndType(user.name, currentTableId);
+                            roomUsersHtml += `
+                                <div class="user-item ${tagInfo.type}">
+                                    <span>${escapeHtml(user.name)}</span>
+                                    <span class="user-tag ${tagInfo.class}">${tagInfo.text}</span>
+                                </div>
+                            `;
+                        });
+                        document.getElementById('room-active-users-list').innerHTML = roomUsersHtml || '<div style="font-size:11px; color:#666; text-align:center;">Kimse yok</div>';
+                    }
+                });
+            });
+        }
+
+        function listenTableData() {
+            if(!currentTableId) return;
+
+            db.ref(`tables/${currentTableId}`).on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                
+                const videoWrapper = document.getElementById('video-container');
+                // Default olarak W2G embed aktif değil, kurpiyer eklediyse görünür
+                if(data.embedCode && data.embedCode.trim() !== "") {
+                    let embedHtml = data.embedCode;
+                    if(!embedHtml.includes('<iframe')) {
+                        embedHtml = `<iframe frameborder='0' width='100%' height='100%' src='${data.embedCode}' allowfullscreen allow='autoplay; fullscreen; camera; microphone;'></iframe>`;
+                    }
+                    videoWrapper.innerHTML = embedHtml;
+                } else {
+                    videoWrapper.innerHTML = `
+                        <div class="no-stream" id="no-stream-screen">
+                            <span>🔴 Bu masada şu an aktif yayın bulunmuyor.</span>
+                            <span style="font-size: 11px; color: #555;">Kurpiyer yayını başlattığında otomatik görünecektir.</span>
+                        </div>
+                    `;
+                }
+
+                const seatsGrid = document.getElementById('seats-grid');
+                seatsGrid.innerHTML = '';
+                const seats = data.seats || {};
+                let activeCount = 0;
+
+                for(let i=1; i<=4; i++) {
+                    const occupant = seats[i];
+                    if(occupant) activeCount++;
+
+                    const seatBox = document.createElement('div');
+                    seatBox.className = `seat-box ${occupant ? 'occupied' : ''}`;
+                    
+                    let actionBtn = '';
+                    if(occupant === currentICName) {
+                        actionBtn = `<button class="seat-action-btn leave" onclick="leaveSeat(${i})">Kalk</button>`;
+                    } else if(!occupant) {
+                        actionBtn = `<button class="seat-action-btn" onclick="takeSeat(${i})">Otur</button>`;
+                    } else {
+                        actionBtn = `<span style="font-size:10px; color:#4caf50;">Dolu</span>`;
+                    }
+
+                    seatBox.innerHTML = `
+                        <div class="seat-title">KOLTUK ${i}</div>
+                        <div class="seat-player">${occupant ? occupant : 'Boş'}</div>
+                        ${actionBtn}
+                    `;
+                    seatsGrid.appendChild(seatBox);
+                }
+
+                document.getElementById('seat-count-badge').innerText = `Aktif Katılımcı: ${activeCount}/4`;
+                
+                // Aktif kullanıcı listesini de koltuk değişimine göre tetikle
+                listenGlobalActiveUsers();
+            });
+        }
+
+        function takeSeat(seatNum) {
+            if(!currentTableId) return;
+            db.ref(`tables/${currentTableId}/seats`).once('value', (snapshot) => {
+                const seats = snapshot.val() || {};
+                for(let i=1; i<=4; i++) {
+                    if(seats[i] === currentICName) {
+                        db.ref(`tables/${currentTableId}/seats/${i}`).remove();
+                    }
+                }
+                db.ref(`tables/${currentTableId}/seats/${seatNum}`).set(currentICName);
+            });
+        }
+
+        function leaveSeat(seatNum) {
+            if(!currentTableId) return;
+            db.ref(`tables/${currentTableId}/seats/${seatNum}`).remove();
+        }
+
+        function updateTableStream() {
+            if(!isModerator || !currentTableId) return;
+            const code = document.getElementById('embed-input').value.trim();
+            db.ref(`tables/${currentTableId}/embedCode`).set(code).then(() => {
+                alert("Masa yayını başlatıldı ve aktifleşti!");
+                document.getElementById('embed-input').value = '';
+            });
+        }
+
+        // Masaya Özel Bağımsız Sohbet Dinleme
+        function sendMessage() {
+            if (localStorage.getItem('love_casino_banned') === 'true' || !currentTableId) return;
 
             const textInput = document.getElementById('chat-text-input');
             const text = textInput.value.trim();
             if (text === '' || currentICName === '') return;
 
-            db.ref('messages').push({
+            db.ref(`chats/${currentTableId}`).push({
                 user: currentICName,
                 text: text
             });
@@ -347,8 +910,9 @@
 
         function listenMessages() {
             const messagesContainer = document.getElementById('chat-messages');
+            if(!currentTableId) return;
             
-            db.ref('messages').limitToLast(50).on('value', (snapshot) => {
+            db.ref(`chats/${currentTableId}`).limitToLast(50).on('value', (snapshot) => {
                 messagesContainer.innerHTML = ''; 
                 const data = snapshot.val();
                 if (data) {
@@ -380,15 +944,19 @@
             });
         }
 
-        // Moderatör Paneli Fonksiyonları
         function openModModal() {
             if (isModerator) {
-                if (confirm("Moderatörlükten çıkmak istiyor musunuz?")) {
+                if (confirm("Kurpiyer/Moderatör yetkisinden çıkmak istiyor musunuz? (Yayındaysanız yayın kapanacaktır)")) {
                     isModerator = false;
+                    document.querySelectorAll('.mod-controls').forEach(el => el.classList.remove('active'));
                     document.getElementById('chat-panel-container').classList.remove('mod-active');
-                    document.getElementById('mod-action-bar').classList.remove('active');
-                    listenMessages();
-                    alert("Moderatörlükten çıkıldı.");
+                    
+                    // Kurpiyer moddan çıktığında odadaysa yayını otomatik kapat
+                    if(currentTableId) {
+                        db.ref(`tables/${currentTableId}/embedCode`).remove();
+                    }
+                    updatePresence(currentTableId || 'lobby'); // Presence güncelle
+                    alert("Kurpiyer yetkisinden çıkıldı ve aktif yayın sonlandırıldı.");
                 }
                 return;
             }
@@ -405,51 +973,36 @@
                 isModerator = true;
                 document.getElementById('mod-login-modal').style.display = 'none';
                 document.getElementById('mod-pass-input').value = '';
+                document.querySelectorAll('.mod-controls').forEach(el => el.classList.add('active'));
                 document.getElementById('chat-panel-container').classList.add('mod-active');
-                document.getElementById('mod-action-bar').classList.add('active');
-                listenMessages();
-                alert("Moderatör yetkisi başarıyla alındı!");
+                
+                // Presence güncelle (Kurpiyer tagı yansısın)
+                updatePresence(currentTableId || 'lobby');
+                listenGlobalActiveUsers();
+
+                alert("Kurpiyer ve Moderatör yetkisi aktif edildi!");
             } else {
-                alert("Hatalı Moderatör Şifresi!");
+                alert("Hatalı Şifre!");
             }
         }
 
-        // Tekil Mesaj Silme
         function deleteMessage(messageKey) {
-            if (!isModerator) return;
-            db.ref('messages/' + messageKey).remove();
+            if (!isModerator || !currentTableId) return;
+            db.ref(`chats/${currentTableId}/${messageKey}`).remove();
         }
 
-        // Kullanıcıyı Engelleme (Banlama)
         function banUser(username) {
             if (!isModerator) return;
-            if (confirm(`${username} adlı kullanıcıyı sohbetten engellemek (banlamak) istediğinize emin misiniz?`)) {
+            if (confirm(`${username} adlı kullanıcıyı platformdan banlamak istediğinize emin misiniz?`)) {
                 db.ref('bans/' + encodeURIComponent(username)).set(true);
-                // Kullanıcının son mesajlarını da temizle
-                db.ref('messages').once('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        Object.entries(data).forEach(([key, msg]) => {
-                            if (msg.user === username) {
-                                db.ref('messages/' + key).remove();
-                            }
-                        });
-                    }
-                });
                 alert(`${username} engellendi.`);
             }
         }
 
-        // Tüm Sohbeti Temizleme
         function clearAllChat() {
-            if (!isModerator) return;
-            if (confirm("Tüm sohbet geçmişini kalıcı olarak silmek istediğinize emin misiniz?")) {
-                db.ref('messages').remove().then(() => {
-                    db.ref('messages').push({
-                        user: "Sistem",
-                        text: "Moderatör tarafından sohbet geçmişi tamamen temizlendi."
-                    });
-                });
+            if (!isModerator || !currentTableId) return;
+            if (confirm("Bu masanın sohbet geçmişini temizlemek istiyor musunuz?")) {
+                db.ref(`chats/${currentTableId}`).remove();
             }
         }
 
